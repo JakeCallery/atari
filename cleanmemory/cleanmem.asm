@@ -22,7 +22,7 @@ ClearMemLoop:
         sta $0,X        ; Store 0 (from reg a) at address $0 + X (Starts at $FF and works back)
         dex             ; x--
         bne ClearMemLoop; loop until X==0 (z-flag set to 1, when reg x gets to 0)
-
+        sta $0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Fill ROM size to exactly 4KB last 4 bytes is the address
