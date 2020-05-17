@@ -75,12 +75,15 @@ StartFrame:
     REPEND
 
     ; Set the next 164 lines with the left and right border walls
-    ldx #%00100000
+    ldx #%01100000
     stx PF0
     
     ; Disable playfield for area inbetween the border walls
     ldx #0
     stx PF1
+
+    ; Draw Middle Wall
+    ldx #%10000000
     stx PF2
     
     ; Keep settings the same for the next 164 scanlines
