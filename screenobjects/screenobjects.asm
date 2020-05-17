@@ -7,6 +7,15 @@
     include "macro.h"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Start an uninitialized segment at $80 for variable declarations
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    seg.uninitialized Variables
+    org $80
+P0Height ds 1       ; define space for 1 byte for player 0 height
+P1Height ds 1       ; defines one byte for player 1 height
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start ROM code segment
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     seg code
@@ -20,6 +29,10 @@ Reset:
 
     lda #$FF        ; load value for white playfield into da
     sta COLUPF      ; set playfield color
+
+    lda #10         ; put 10 in reg a
+    sta P0Height    ; P0Height now is set to 10
+    sta P1Height    ; P1Height now is set to 10
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Set the TIA registers for the colors of P0 and P1
@@ -103,7 +116,7 @@ Player0Loop:
     sta GRP0            ; Store current y bitmap byte into player 0 graphics register
     sta WSYNC
     iny
-    cpy #10
+    cpy P0Height
     bne Player0Loop
 
     lda #0
@@ -119,7 +132,7 @@ Player1Loop:
     sta GRP1            ; Store current y bitmap byte into player 1 graphics register
     sta WSYNC
     iny
-    cpy #10
+    cpy P1Height
     bne Player1Loop
 
     lda #0
