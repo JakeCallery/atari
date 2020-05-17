@@ -3,8 +3,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Include required files with vcs definitions and macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    include "./vcs.h"
-    include "./macro.h"
+    include "vcs.h"
+    include "macro.h"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start ROM code segment
@@ -41,9 +41,9 @@ StartFrame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Generate the three lines of VSYNC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    sta WSYNC   ; Wait for vsync
-    sta WSYNC   ; Wait for vsync
-    sta WSYNC   ; Wait for vsync
+    REPEAT 3
+        sta WSYNC
+    REPEND
 
     lda #0      ;
     sta VSYNC   ; store 0 into VSYNC to turn off vsync
@@ -57,18 +57,6 @@ StartFrame:
 
     lda #0
     sta VBLANK  ; Disable vblank
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Output 30 more VBLANK lines (overscan) to complete our frame
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    lda #2 
-    sta VBLANK  ; Turn VBLANK back on for overscan
-    REPEAT 30
-        sta WSYNC
-    REPEND
-    lda #0
-    sta VBLANK  ; Turn VBLANK off again now that overscan is complete
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DRAW KERNEL HERE (192 visble scan lines)
@@ -85,12 +73,111 @@ VisibleScanlines:
 ;; Pulls data from an array of bytes defined at NumberBitmap
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ldy #0
-    
+ScoreboardLoop:
+    lda NumberBitmap,y
+    sta PF1
+    sta WSYNC
+    iny                    ; inc y reg
+    cpy #10                ; compare y to 10  (will set z register to 0 if the same, 1 otherwise)
+    bne ScoreboardLoop     ; branch if compare returns something other than 0
+
+    lda #0
+    sta PF1                 ; disable playfield
+
+    ;Draw 50 empty scanlines between scoreboard and player
+    REPEAT 50
+        sta WSYNC
+    REPEND
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Displays 10 scanlines for Player 0 graphics. 
+;; Pulls data from an arrof of bytes defined at PlayerBitmap
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ldy #0
+Player0Loop:
+    lda PlayerBitmap,Y
+    sta GRP0            ; Store current y bitmap byte into player 0 graphics register
+    sta WSYNC
+    iny
+    cpy #10
+    bne Player0Loop
+
+    lda #0
+    sta GRP0            ; Disable player 0 graphics
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Displays 10 scanlines for Player 1 graphics. 
+;; Pulls data from an arrof of bytes defined at PlayerBitmap
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ldy #0
+Player1Loop:
+    lda PlayerBitmap,Y
+    sta GRP1            ; Store current y bitmap byte into player 1 graphics register
+    sta WSYNC
+    iny
+    cpy #10
+    bne Player1Loop
+
+    lda #0
+    sta GRP1            ; Disable player 1 graphics
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Draw the remaining 102 scanlines
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    REPEAT 102
+        sta WSYNC
+    REPEND
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Output 30 more VBLANK lines (overscan) to complete our frame
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    lda #2 
+    sta VBLANK  ; Turn VBLANK back on for overscan
+    REPEAT 30
+        sta WSYNC
+    REPEND
+    lda #0
+    sta VBLANK  ; Turn VBLANK off again now that overscan is complete
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Loop over to start the next frame
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     jmp StartFrame
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Defines an array of bytes to draw the scoreboard number.
+;; We add these bytes in the last ROM addresses.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    org $FFE8
+PlayerBitmap:
+    .byte #%01111110   ;  ######
+    .byte #%11111111   ; ########
+    .byte #%10011001   ; #  ##  #
+    .byte #%11111111   ; ########
+    .byte #%11111111   ; ########
+    .byte #%11111111   ; ########
+    .byte #%10111101   ; # #### #
+    .byte #%11000011   ; ##    ##
+    .byte #%11111111   ; ########
+    .byte #%01111110   ;  ######
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Defines an array of bytes to draw the scoreboard number.
+;; We add these bytes in the final ROM addresses.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    org $FFF2
+NumberBitmap:
+    .byte #%00001110   ; ########
+    .byte #%00001110   ; ########
+    .byte #%00000010   ;      ###
+    .byte #%00000010   ;      ###
+    .byte #%00001110   ; ########
+    .byte #%00001110   ; ########
+    .byte #%00001000   ; ###
+    .byte #%00001000   ; ###
+    .byte #%00001110   ; ########
+    .byte #%00001110   ; ########
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Complete ROM size to 4KB
