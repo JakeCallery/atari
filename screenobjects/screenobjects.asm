@@ -30,6 +30,9 @@ Reset:
     lda #$C6        ; player 1 color, light green
     sta COLUP1  
 
+    ldy #%00000010  ; CTLPF D1 set to 1 means "score" (will assume player color)
+    sty CTRLPF
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Start a new frame by turning on VBLANK and VSYNC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
