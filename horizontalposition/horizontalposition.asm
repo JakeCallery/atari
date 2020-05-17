@@ -76,7 +76,7 @@ DividLoop:              ; A contains desired x position / loop costs 15 color cl
     asl 
     asl 
     sta HMP0            ; stick remainder into fine position register (horizontal motion player 0)
-    sta RESP0           ; strobe player 0 reset (sets rough position based on the 15 pixel blocks / position in scanline)
+    sta RESP0           ; strobe player 0 reset / finalize x position
     sta WSYNC           ; wait for next scanline
     sta HMOVE           ; apply the fine position offset
 
