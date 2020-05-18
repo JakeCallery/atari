@@ -30,7 +30,7 @@ Reset:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialize variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    lda #50
+    lda #40
     sta P0XPos     ; initialize player X coordinate
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -66,9 +66,9 @@ StartFrame:
 
     sec                 ; set carry flag before subtraction
 
-DividLoop:              ; A contains desired x position / loop costs 15 color clocks
+DivideLoop:              ; A contains desired x position / loop costs 15 color clocks
     sbc #15             ; A -= 15
-    bcs DividLoop       ; loop will carry flag is still set
+    bcs DivideLoop       ; loop will carry flag is still set
                         ; After the loop A contains the remainder of the division
     eor #7              ; adjust remainder in A between -8 and 7 (exclusive or)
     asl                 ; left shift 4 times, as HMP0 uses only most sig 4 bits
@@ -81,7 +81,7 @@ DividLoop:              ; A contains desired x position / loop costs 15 color cl
     sta HMOVE           ; apply the fine position offset
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Let the TIA output the 37 recommended lines of VBLANK
+;; Let the TIA output the 37 - 2 (2 used for x position) recommended lines of VBLANK
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     REPEAT 35           ; not sure if this should be 35 or 37 (used 2 scanlines during x position set)
@@ -132,6 +132,12 @@ Overscan:
 ;; Increment X coordinate before next frame for animation.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     inc P0XPos
+    lda P0XPos
+    sbc #80
+    bne NoResetX
+    lda #40
+    sta P0XPos
+NoResetX:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Loop to next frame
